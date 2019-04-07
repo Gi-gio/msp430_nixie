@@ -2,7 +2,7 @@
  * timer.c
  *
  *  Created on: 24.08.2018
- *      Author: Giordano
+ *      Author: Giordano Altomare
  */
 
 #include "hw.h"
@@ -15,7 +15,7 @@ __interrupt void Timer0A0_ISR(void)
 {
     if(++(timePtr->second) > 59) timePtr->second = 0;
     P1OUT ^= BIT0;
-    checkDCFSignal();
+    //checkDCFSignal();
 }
 
 #pragma vector=TIMER0_A1_VECTOR
@@ -31,8 +31,9 @@ __interrupt void Timer0A1_ISR(void)
                     } else
                     {
                         P1OUT &= ~LED2;
-                        __bic_SR_register_on_exit(GIE);
+
                     }
+                    //__bic_SR_register_on_exit(GIE);
 
                     break;
         case 0x04:  break;

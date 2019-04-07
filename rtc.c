@@ -17,6 +17,7 @@ void initRTC(void)
     timePtr->hour   = 88;
     timePtr->minute = 88;
     timePtr->second = 00;
+    timePtr->secondOld = 00;
 }
 
 time_t* getTime(void)
@@ -27,6 +28,21 @@ time_t* getTime(void)
 void setTime(void)
 {
 
+}
+
+
+void runTime(void)
+{
+    __disable_interrupt();
+
+
+    if (timePtr->hour != 88 && timePtr->second != timePtr->secondOld)
+    {
+        timePtr->secondOld = timePtr->second;
+
+
+    }
+    __enable_interrupt();
 }
 
 

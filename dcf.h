@@ -14,7 +14,7 @@
 
 #include "rtc.h"
 
-#define DCF_IN      TA0CCTL1 & (1u << 3)  //check if dcf-in is high
+#define DCF_IN      TACCTL1 & (1u << 3)  //check if dcf-in is high
 
 
 typedef enum dcfSignalType_ {
@@ -24,9 +24,11 @@ typedef enum dcfSignalType_ {
     none
 } dcfSignalType_t;
 
+// states for the dcf state-machine
 typedef enum dcfState {
+    dcfInit = 1,
     dcfStart,
-    dcfFirstLow,
+    dcfFirstLow,        //first low for blanking -> getting clean start
     dcfLow,
     dcfHigh,
     dcfCalc,

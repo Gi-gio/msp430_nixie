@@ -4,12 +4,17 @@
  *  Created on: 22.08.2018
  *      Author: Giordano Altomare
  */
+
+#include <string.h>
+
+
 #include "hw.h"
 #include "dcf.h"
 #include "rtc.h"
 
 
-uint8_t dcfSignalRaw[60];
+
+//uint8_t dcfSignalRaw[60];
 dcfState_t state;
 bool dcfFlag;
 logicDetect_t logicDetect;
@@ -24,11 +29,15 @@ static struct dcfData_{
 
 void initDCF(void)
 {
-    state = dcfStart;
+    // set state-machine to start
+    state = dcfInit;
+
+    // 'reset' dcfData
     dcfData.start = true;
     dcfData.invalid &= false;;
     dcfData.end   &= false;
-    dcfData.countSignal &= false;
+    memset(dcfData.dcfSignalRaw,none,60);           //set all signal values to 'none'
+    dcfData.countSignal &= 0;
 }
 
 void restartDCF(void)
@@ -39,7 +48,6 @@ void restartDCF(void)
 struct dcfData_ collectData(void)
 {
     static int8_t secondInit;
-    static int16_t signalRaw[60];
     logicDetect.captureDiff = (logicDetect.captureNew > logicDetect.captureOld) ? logicDetect.captureNew - logicDetect.captureOld : logicDetect.captureNew + 0x7FFF - logicDetect.captureOld;
     if(!(logicDetect.captureDiff<3200 || logicDetect.captureDiff>7300) && !dcfData.end)
     {
@@ -48,7 +56,6 @@ struct dcfData_ collectData(void)
             secondInit = dcfData.countSignal - timePtr->second;
             dcfData.start = false;
         }
-        signalRaw[dcfData.countSignal] = dcfData.countSignal;
         if (dcfData.countSignal != secondInit + timePtr->second)        /*correction if pause was missed*/
         {
             dcfData.dcfSignalRaw[dcfData.countSignal++] = none;
@@ -68,23 +75,24 @@ struct dcfData_ collectData(void)
 
 void dcfStateMachine(void)
 {
-    static uint8_t init = 0;
-
     switch(state)
     {
-        case dcfStart:      if ((init > 3) && logicDetect.low)
+        case dcfInit:       state = dcfStart;
+
+
+            break;
+        case dcfStart:      if (logicDetect.type == low)
                             {
                                 state = dcfFirstLow;
                             }
-                            init++;
             break;
-        case dcfFirstLow  : if (logicDetect.low)
+        case dcfFirstLow  : if (logicDetect.type == low)
                             {
                                 state = dcfLow;
                                 dcfFlag = false;
                             }
             break;
-        case dcfLow  :      if (dcfFlag && logicDetect.low)
+        case dcfLow  :      if (dcfFlag && logicDetect.type == low)
                             {
                                 dcfFlag = false;
                                 if(collectData().invalid)
@@ -94,21 +102,21 @@ void dcfStateMachine(void)
                                 {
                                     state = dcfCalc;
                                 }
-                                else if (!logicDetect.low)
+                                else if (!(logicDetect.type == low))
                                 {
                                     state = dcfHigh;
                                 }
                             }
                             __enable_interrupt();
             break;
-        case dcfHigh :      if(logicDetect.low) state = dcfLow;
+        case dcfHigh :      if(logicDetect.type == low)
+                            state = dcfLow;
                             dcfFlag = false;
             break;
         case dcfInvalid:    restartDCF();
             break;
-        case dcfCalc:       while(1);
+        case dcfCalc:      ;
             break;
-        default:            _no_operation();
     }
 }
 
@@ -120,7 +128,7 @@ void dcfSignalKind(uint16_t rising_edge)
     if (logicDetect.captureDiff>7500 || logicDetect.captureDiff<3200)
     {
         logicDetect.type = invalid;
-    } else if (logicDetect.captureDiff<4000)
+    } else if (logicDetect.captureDiff < 4000)
     {
         logicDetect.type = low;
     } else

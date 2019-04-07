@@ -6,6 +6,7 @@
  */
 
 #include <stdint.h>
+#include <msp430.h>
 
 #ifndef RTC_H_
 #define RTC_H_
@@ -14,6 +15,7 @@ typedef struct {
     uint8_t hour;
     uint8_t minute;
     uint8_t second;
+    uint8_t secondOld;
 } time_t;
 
 typedef struct {
@@ -29,5 +31,6 @@ extern date_t* datePtr;
 void initRTC(void);
 time_t* getTime(void);
 void setTime(void);
+void initRTC(void);
 
 #endif /* RTC_H_ */

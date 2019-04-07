@@ -31,12 +31,13 @@ int main ( void )
     TACTL |= MC_1 ;                    //start timer in up-mode (count to TACCRx)
 
 
-    //init DCF state machine
+    // init DCF state machine
     initDCF();
+    initRTC();
     __enable_interrupt();
     while(1)
     {
-        dcfStateMachine();
+                dcfStateMachine();
     }
 }
 
